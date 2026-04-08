@@ -2,23 +2,19 @@ package entity;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
-
 import main.GamePanel;
 import main.KeyHandler;
-import main.UtilityTool;
 
 public class Player extends Entity {
 
-    GamePanel gp;
     KeyHandler keyHandler;
     public final int screenX;
     public final int screenY;
-    //public int hasKey = 0;// we will use this to check if the player has the key or not, we can also use a boolean for this, but I want to use an int so we can have multiple keys in the future
     int standCounter = 0;// this will be used to reset the sprite animation to the default sprite when the player is not moving
-
+    public int haskey=0;
     public Player(GamePanel gp, KeyHandler keyHandler) {
-        this.gp = gp;
+        
+        super(gp);// call the constructor of the parent class to initialize the gp variable
         this.keyHandler = keyHandler;
         screenX = gp.screenWidth / 2 - (gp.tileSize / 2);// we want the player to be in the center of the screen, so we divide the screen width by 2
         screenY = gp.screenHeight / 2 - (gp.tileSize / 2);
@@ -38,28 +34,28 @@ public class Player extends Entity {
     }
 
     public void getPlayerImage() {
-        up1 = setup("boy_up_1");
-        up2 = setup("boy_up_2");    
-        down1 = setup("boy_down_1");
-        down2 = setup("boy_down_2");
-        left1 = setup("boy_left_1");
-        left2 = setup("boy_left_2");
-        right1 = setup("boy_right_1");
-        right2 = setup("boy_right_2");
+        up1 = setup("/res/Player/Walking/boy_up_1");
+        up2 = setup("/res/Player/Walking/boy_up_2");    
+        down1 = setup("/res/Player/Walking/boy_down_1");
+        down2 = setup("/res/Player/Walking/boy_down_2");
+        left1 = setup("/res/Player/Walking/boy_left_1");
+        left2 = setup("/res/Player/Walking/boy_left_2");
+        right1 = setup("/res/Player/Walking/boy_right_1");
+        right2 = setup("/res/Player/Walking/boy_right_2");
 
     }
 
-    public BufferedImage setup(String imageName) {
-        UtilityTool uTool = new UtilityTool();
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(getClass().getResourceAsStream("/res/Player/Walking/" + imageName + ".png"));
-            image = uTool.scaleImage(image, gp.tileSize, gp.tileSize);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return image;
-    }
+    // public BufferedImage setup(String imageName) {
+    //     UtilityTool uTool = new UtilityTool();
+    //     BufferedImage image = null;
+    //     try {
+    //         image = ImageIO.read(getClass().getResourceAsStream(imageName + ".png"));
+    //         image = uTool.scaleImage(image, gp.tileSize, gp.tileSize);
+    //     } catch (Exception e) {
+    //         e.printStackTrace();
+    //     }
+    //     return image;
+    // }
 
 
     public void update() {
@@ -84,9 +80,15 @@ public class Player extends Entity {
 
         collisionOn = false;// reset collision flag before checking for collisions
         gp.cChecker.checkTile(this);// check for tile collisions, we will implement
+        
         // check object collision
         int objIndex = gp.cChecker.checkObject(this, true);// check for object collisions,
         pickUpObject(objIndex);
+
+        //check npc collion
+        int npcIndex=gp.cChecker.checkEntity(this, gp.npc);
+        interactNPC(npcIndex);
+
         //if collisionOn is true, then we will undo the movement that we just did, so the player will not move into the tile that has collision = true    
         if(collisionOn == true) {
             switch(direction) {
@@ -126,8 +128,48 @@ public class Player extends Entity {
 
     public void pickUpObject(int index) {
         if (index != 999) {
+            // gp.obj[index]=null;
+            String objectName= gp.obj[index].name;
+
+            switch(objectName){
+                case "Key":
+                    haskey++;
+                    gp.obj[index]=null;
+                    gp.ui.showMessage("Got a key!");
+                    break;
+                case "Door":
+                    if(haskey>0){
+                        gp.obj[index]=null;
+                        haskey--;
+                        gp.ui.showMessage("Opened a door!");
+                    }
+                    else{
+                        gp.ui.showMessage("Need a key!");
+                    }
+                    System.out.print("Key:"+haskey);
+                    break;
+                case "Boots":
+                    speed+=2;
+                    gp.obj[index]=null;
+                    gp.ui.showMessage("Speed up!");
+                    break;
+
+                case "Chest":
+                    gp.ui.gameFinished=true;
+                    gp.stopMusic();
+                    gp.playSE(4);
+                    //gp.ui.showMessage("Speed up!");
+                    break;
+            }
         }
     }
+
+    public void interactNPC(int i){
+        if(i !=999){
+            System.out.print("u r hitting npc");
+        }
+    }
+
 
     public void draw(Graphics2D g2) {
         BufferedImage image = null;

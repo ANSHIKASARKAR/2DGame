@@ -1,6 +1,7 @@
 package main;
 import javax.swing.JPanel;
 
+import entity.Entity;
 import entity.Player;
 import object.SuperObject;
 import tile.TileManager;
@@ -35,12 +36,13 @@ public class GamePanel extends JPanel implements Runnable {
     //Entity and Object 
     public Player player = new Player(this, keyHandler);
     public SuperObject obj[] = new SuperObject[10]; // we will have 10 different objects in the game, like keys, doors, etc.
-
+    public Entity npc[] = new Entity[10]; // we will have 10 different NPCs in
     //Game state
     public int gameState;
     //public final int titleState = 0;
     public final int playState = 1;
     public final int pauseState = 2;
+    public final int dailogueState=3;
 
 
 
@@ -55,6 +57,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void setupGame() {
         aSetter.setObject();
+        aSetter.setNPC();
         playMusic(0);//BlueByAdventure music plays
         gameState = playState;
     }
@@ -95,6 +98,12 @@ public class GamePanel extends JPanel implements Runnable {
         if(gameState==playState) {
             //update the game
             player.update();
+            //npc
+            for (int i = 0; i < npc.length; i++) {
+                if (npc[i] != null) {
+                    npc[i].update();
+                }
+            }
         }
         if(gameState==pauseState) {
             // do nothing, the game is paused
@@ -111,6 +120,13 @@ public class GamePanel extends JPanel implements Runnable {
                 obj[i].draw(g2, this);
             }
         }
+        //NPC
+        for (int i = 0; i < npc.length; i++) {
+            if (npc[i] != null) {
+                npc[i].draw(g2);
+            }
+        }
+
         //PLAYER
         player.draw(g2);
         ui.draw(g2);
